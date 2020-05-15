@@ -59,7 +59,7 @@ var (
 			Argument:  labels,
 			Shorthand: "l",
 			Default:   "",
-			Usage:     "The labels names (comma-separated) of entity labels that must be added to the prefix in graphite for these metrics",
+			Usage:     "The labels names (comma-separated) of entity/check labels that must be added to the prefix in graphite for these metrics",
 			Value:     &config.Labels,
 		},
 		{
@@ -67,7 +67,7 @@ var (
 			Argument:  annotations,
 			Shorthand: "a",
 			Default:   "",
-			Usage:     "The annotations names (comma-separated) of entity annotations that must be added to the prefix in graphite for these metrics",
+			Usage:     "The annotations names (comma-separated) of entity/check annotations that must be added to the prefix in graphite for these metrics",
 			Value:     &config.Annotations,
 		},
 		{
@@ -127,16 +127,21 @@ func SendMetrics(event *corev2.Event) error {
 	)
 
 	prefix := config.Prefix
+	sanitizedChars := strings.NewReplacer("/", "_", "@", "_", " ", "_", ".", "_")
 
 	for _, label := range strings.Split(config.Labels, ",") {
 		if val, ok := event.Entity.Labels[label]; ok {
-			prefix = fmt.Sprintf("%s.%s", prefix, val)
+			prefix = fmt.Sprintf("%s.%s", prefix, sanitizedChars.Replace(val))
+		} else if val, ok := event.Check.Labels[label]; ok {
+			prefix = fmt.Sprintf("%s.%s", prefix, sanitizedChars.Replace(val))
 		}
 	}
 
 	for _, annotation := range strings.Split(config.Annotations, ",") {
 		if val, ok := event.Entity.Annotations[annotation]; ok {
-			prefix = fmt.Sprintf("%s.%s", prefix, val)
+			prefix = fmt.Sprintf("%s.%s", prefix, sanitizedChars.Replace(val))
+		} else if val, ok := event.Check.Annotations[annotation]; ok {
+			prefix = fmt.Sprintf("%s.%s", prefix, sanitizedChars.Replace(val))
 		}
 	}
 
@@ -148,15 +153,15 @@ func SendMetrics(event *corev2.Event) error {
 	for _, point := range event.Metrics.Points {
 		if config.NoPrefix {
 			tmpvalue := fmt.Sprintf("%f", point.Value)
-			metrics = append(metrics, graphite.NewMetric(point.Name, tmpvalue, point.Timestamp))
-			//log.Println("%s %d %d", point.Name, tmpvalue, point.Timestamp)
+			tmp_point_name = sanitizedChars.Replace(point.Name)
+			metrics = append(metrics, graphite.NewMetric(tmp_point_name, tmpvalue, point.Timestamp))
 		} else {
 			// Deal with special cases, such as disk checks that return file system paths as the name
 			// Graphite places these on disk using the name, so using any slashes would cause confusion and lost metrics
 			if point.Name == "/" {
 				tmp_point_name = "root"
 			} else {
-				tmp_point_name = strings.Replace(point.Name, "/", "_", -1)
+				tmp_point_name = sanitizedChars.Replace(point.Name)
 			}
 			tmpname := fmt.Sprintf("%s.%s", prefix, tmp_point_name)
 			tmpvalue := fmt.Sprintf("%f", point.Value)
