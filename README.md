@@ -56,12 +56,15 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
+  -a, --annotations string    The annotations names (comma-separated) of entity/check annotations that must be added to the prefix in graphite for these metrics
+  -c, --count                 Count all metrics in event and append to metrics
+  -s, --count-scheme string   the string to be prepended to count metric in graphite
   -h, --help                  help for sensu-go-graphite-handler
-  -l, --labels string         the annotations names (comma-separated) of entity/check annotations that must be added to the prefix in graphite for these metrics
-  -a, --annotations string    the labels names (comma-separated) of entity/check labels that must be added to the prefix in graphite for these metrics
   -H, --host string           the hostname or address of the graphite server (default "127.0.0.1")
+  -l, --labels string         The labels names (comma-separated) of entity/check labels that must be added to the prefix in graphite for these metrics
+  -n, --no-prefix             Do not include *any* prefixes, use the bare metrics.point.name
   -p, --port uint             the port number to which to connect on the graphite server (default 2003)
-  -n, --no-prefix             unsets the default prefix value, use the bare metrics.point.name
+  -P, --prefix string         the string to be prepended to each metric in graphite (default "sensu")
 ```
 
 Labels or Annotations will lookup in event entity, then in event check if not found.

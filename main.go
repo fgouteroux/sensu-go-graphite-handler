@@ -15,6 +15,8 @@ type HandlerConfig struct {
 	Labels      string
 	Annotations string
 	NoPrefix    bool
+	Count       bool
+	CountScheme string
 	Port        uint64
 	Host        string
 }
@@ -25,6 +27,8 @@ const (
 	labels      = "labels"
 	annotations = "annotations"
 	noPrefix    = "no-prefix"
+	count       = "count"
+	countScheme = "count-scheme"
 	port        = "port"
 	host        = "host"
 
@@ -79,6 +83,22 @@ var (
 			Value:     &config.NoPrefix,
 		},
 		{
+			Path:      count,
+			Argument:  count,
+			Shorthand: "c",
+			Default:   false,
+			Usage:     "Count all metrics in event and append to metrics",
+			Value:     &config.Count,
+		},
+		{
+			Path:      countScheme,
+			Argument:  countScheme,
+			Shorthand: "s",
+			Default:   "",
+			Usage:     "the string to be prepended to count metric in graphite",
+			Value:     &config.CountScheme,
+		},
+		{
 			Path:      port,
 			Argument:  port,
 			Shorthand: "p",
@@ -108,8 +128,8 @@ func CheckArgs(event *corev2.Event) error {
 	}
 
 	if config.NoPrefix {
-		config.Prefix      = ""
-		config.Labels      = ""
+		config.Prefix = ""
+		config.Labels = ""
 		config.Annotations = ""
 	}
 
@@ -124,6 +144,7 @@ func SendMetrics(event *corev2.Event) error {
 	var (
 		metrics        []graphite.Metric
 		tmp_point_name string
+		tmp_name       string
 	)
 
 	prefix := config.Prefix
@@ -167,6 +188,49 @@ func SendMetrics(event *corev2.Event) error {
 			tmpvalue := fmt.Sprintf("%f", point.Value)
 			metrics = append(metrics, graphite.NewMetric(tmpname, tmpvalue, point.Timestamp))
 		}
+	}
+
+	if config.Count {
+
+		if strings.Contains(config.CountScheme, "labels:") && strings.Contains(config.CountScheme, "annotations:") {
+			return fmt.Errorf("usage of labels and annotations are mutually exclusive in count-scheme")
+		}
+		prefix_count := config.Prefix
+		if config.CountScheme != "" {
+
+			if strings.Contains(config.CountScheme, "labels:") {
+				labels := strings.Split(config.CountScheme, "labels:")
+
+				for _, label := range strings.Split(labels[1], ",") {
+					if val, ok := event.Entity.Labels[label]; ok {
+						prefix_count = fmt.Sprintf("%s.%s", prefix_count, sanitizedChars.Replace(val))
+					} else if val, ok := event.Check.Labels[label]; ok {
+						prefix_count = fmt.Sprintf("%s.%s", prefix_count, sanitizedChars.Replace(val))
+					}
+				}
+			}
+
+			if strings.Contains(config.CountScheme, "annotations:") {
+
+				annotations := strings.Split(config.CountScheme, "annotations:")
+				for _, annotation := range strings.Split(annotations[1], ",") {
+					if val, ok := event.Entity.Annotations[annotation]; ok {
+						prefix_count = fmt.Sprintf("%s.%s", prefix_count, sanitizedChars.Replace(val))
+					} else if val, ok := event.Check.Annotations[annotation]; ok {
+						prefix_count = fmt.Sprintf("%s.%s", prefix_count, sanitizedChars.Replace(val))
+					}
+				}
+			}
+		}
+
+		metric_count := fmt.Sprintf("%f", len(event.Metrics.Points))
+
+		if config.NoPrefix {
+			tmp_name = fmt.Sprintf("%s.%s", event.Check.Name, "count")
+		} else {
+			tmp_name = fmt.Sprintf("%s.%s.%s", prefix_count, event.Check.Name, "count")
+		}
+		metrics = append(metrics, graphite.NewMetric(tmp_name, metric_count, event.Timestamp))
 	}
 
 	if err = g.SendMetrics(metrics); err != nil {
