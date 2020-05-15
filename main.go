@@ -95,7 +95,7 @@ var (
 			Argument:  countScheme,
 			Shorthand: "s",
 			Default:   "",
-			Usage:     "the string to be prepended to count metric in graphite",
+			Usage:     "the string to be prepended to count metric in graphite, could be: my.scheme1 or labels:label1,label2 or annotations:annotation1,annotation2",
 			Value:     &config.CountScheme,
 		},
 		{

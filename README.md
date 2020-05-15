@@ -58,7 +58,7 @@ Available Commands:
 Flags:
   -a, --annotations string    The annotations names (comma-separated) of entity/check annotations that must be added to the prefix in graphite for these metrics
   -c, --count                 Count all metrics in event and append to metrics
-  -s, --count-scheme string   the string to be prepended to count metric in graphite
+  -s, --count-scheme string   the string to be prepended to count metric in graphite, could be: my.scheme1 or labels:label1,label2 or annotations:annotation1,annotation2
   -h, --help                  help for sensu-go-graphite-handler
   -H, --host string           the hostname or address of the graphite server (default "127.0.0.1")
   -l, --labels string         The labels names (comma-separated) of entity/check labels that must be added to the prefix in graphite for these metrics
