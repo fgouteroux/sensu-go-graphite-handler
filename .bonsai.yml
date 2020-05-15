@@ -17,22 +17,6 @@ builds:
   -  "entity.system.os == 'linux'"
   -  "entity.system.arch == '386'"
 
-- platform: "linux"
-  arch: "arm64"
-  asset_filename: "#{repo}_#{version}_linux_arm64.tar.gz"
-  sha_filename: "#{repo}_#{version}_sha512-checksums.txt"
-  filter:
-  -  "entity.system.os == 'linux'"
-  -  "entity.system.arch == 'arm64'"
-
-- platform: "linux"
-  arch: "armv7"
-  asset_filename: "#{repo}_#{version}_linux_armv7.tar.gz"
-  sha_filename: "#{repo}_#{version}_sha512-checksums.txt"
-  filter:
-  -  "entity.system.os == 'linux'"
-  -  "entity.system.arch == 'armv7'"
-
 - platform: "osX"
   arch: "amd64"
   asset_filename: "#{repo}_#{version}_darwin_amd64.tar.gz"

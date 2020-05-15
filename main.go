@@ -148,7 +148,7 @@ func SendMetrics(event *corev2.Event) error {
 	)
 
 	prefix := config.Prefix
-	sanitizedChars := strings.NewReplacer("/", "_", "@", "_", " ", "_", ".", "_")
+	sanitizedChars := strings.NewReplacer("/", "_", "@", "_", " ", "_",)
 
 	for _, label := range strings.Split(config.Labels, ",") {
 		if val, ok := event.Entity.Labels[label]; ok {
@@ -223,7 +223,7 @@ func SendMetrics(event *corev2.Event) error {
 			}
 		}
 
-		metric_count := fmt.Sprintf("%f", len(event.Metrics.Points))
+		metric_count := fmt.Sprintf("%d", len(event.Metrics.Points))
 
 		if config.NoPrefix {
 			tmp_name = fmt.Sprintf("%s.%s", event.Check.Name, "count")
