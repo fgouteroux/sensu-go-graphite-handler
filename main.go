@@ -118,11 +118,11 @@ var (
 			Value:     &config.Host,
 		},
 		{
-			Path:      protocol,
-			Argument:  protocol,
-			Default:   defaultProtocol,
-			Usage:     "the protocol to which to connect on the graphite server",
-			Value:     &config.Protocol,
+			Path:     protocol,
+			Argument: protocol,
+			Default:  defaultProtocol,
+			Usage:    "the protocol to which to connect on the graphite server",
+			Value:    &config.Protocol,
 		},
 	}
 )
@@ -158,7 +158,7 @@ func SendMetrics(event *corev2.Event) error {
 	)
 
 	prefix := config.Prefix
-	sanitizedChars := strings.NewReplacer("/", "_", "@", "_", " ", "_",)
+	sanitizedChars := strings.NewReplacer("/", "_", "@", "_", " ", "_")
 
 	for _, label := range strings.Split(config.Labels, ",") {
 		if val, ok := event.Entity.Labels[label]; ok {
