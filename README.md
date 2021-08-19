@@ -65,6 +65,7 @@ Flags:
   -n, --no-prefix             Do not include *any* prefixes, use the bare metrics.point.name
   -p, --port uint             the port number to which to connect on the graphite server (default 2003)
   -P, --prefix string         the string to be prepended to each metric in graphite (default "sensu")
+      --protocol string       the protocol to which to connect on the graphite server (default "tcp")
 ```
 
 Labels or Annotations will lookup in event entity, then in event check if not found.

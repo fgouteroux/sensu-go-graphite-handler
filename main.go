@@ -19,6 +19,7 @@ type HandlerConfig struct {
 	CountScheme string
 	Port        uint64
 	Host        string
+	Protocol    string
 }
 
 const (
@@ -31,11 +32,13 @@ const (
 	countScheme = "count-scheme"
 	port        = "port"
 	host        = "host"
+	protocol    = "protocol"
 
 	// defaults
-	defaultPrefix = "sensu"
-	defaultPort   = 2003
-	defaultHost   = "127.0.0.1"
+	defaultPrefix   = "sensu"
+	defaultPort     = 2003
+	defaultHost     = "127.0.0.1"
+	defaultProtocol = "tcp"
 )
 
 var (
@@ -114,6 +117,13 @@ var (
 			Usage:     "the hostname or address of the graphite server",
 			Value:     &config.Host,
 		},
+		{
+			Path:      protocol,
+			Argument:  protocol,
+			Default:   defaultProtocol,
+			Usage:     "the protocol to which to connect on the graphite server",
+			Value:     &config.Protocol,
+		},
 	}
 )
 
@@ -166,7 +176,13 @@ func SendMetrics(event *corev2.Event) error {
 		}
 	}
 
-	g, err := graphite.NewGraphite(config.Host, int(config.Port))
+	var err error
+	var g *graphite.Graphite
+	if config.Protocol == "udp" {
+		g, err = graphite.NewGraphiteUDP(config.Host, int(config.Port))
+	} else {
+		g, err = graphite.NewGraphite(config.Host, int(config.Port))
+	}
 	if err != nil {
 		return err
 	}
@@ -233,9 +249,11 @@ func SendMetrics(event *corev2.Event) error {
 		metrics = append(metrics, graphite.NewMetric(tmp_name, metric_count, event.Timestamp))
 	}
 
-	if err = g.SendMetrics(metrics); err != nil {
-		return err
+	err = g.SendMetrics(metrics)
+	errClose := g.Disconnect()
+	if errClose != nil {
+		err = fmt.Errorf("SendMetrics error: %v. Disconnect error: %v", err, errClose)
 	}
 
-	return g.Disconnect()
+	return err
 }
